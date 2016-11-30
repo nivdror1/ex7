@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.lang.String;
+
 
 /**
  * this class translates the vm code into asm code
@@ -17,6 +20,15 @@ public class CodeWriter {
     private static final String AND="and";
     private static final String OR="or";
     private static final String NOT="not";
+    
+    // omri 
+    private static final String LOCAL ="local";
+    private static final String ARGUMENT="argument";
+    private static final String THIS="this";
+    private static final String THAT="that";
+    private static final String POINTER="pointer";
+    private static final String TEMP="TEMP";
+    private static final String SP="sp";
 
     /**signify the address of the data */
     private static final String AT="@";
@@ -43,10 +55,19 @@ public class CodeWriter {
     /** a memory segment instance*/
     private MemorySegment segment;
 
+    private HashMap<String, Integer> segmentBaseMap;
+    
     /** a singleton constructor*/
     private CodeWriter(){
         this.asmLines= new ArrayList<>();
         this.segment=new MemorySegment();
+        this.segmentBaseMap = new HashMap<String, Integer>(100);
+        segmentBaseMap.put(SP, 0);
+        segmentBaseMap.put(LOCAL, 1);
+        segmentBaseMap.put(ARGUMENT, 2);
+        segmentBaseMap.put(THIS, 3);
+        segmentBaseMap.put(THAT, 4);
+        segmentBaseMap.put(TEMP, 5);
     }
 
 
@@ -85,6 +106,49 @@ public class CodeWriter {
         }
 
     }
+    // omri
+    public void writePushPop(String operation, String memory, int address){
+        if(operation.equals(PUSH)) {
+        	writePush(memory, address);
+        }
+        else if(operation.equals(POP)){
+        	writePop(memory, address);
+        }
+
+    }
+    
+    private void writePush(String memory, int address){
+    	/*
+    	 * 	@address
+    	 * 	D=A
+    	 * 	@memory	//A=(segment address adress)
+    	 * 	A=M+D
+    	 * 	D=M //	read the relevant content to D
+    	 * 	A=(sp)
+    	 * 	A=M
+    	 * 	M=D	//	update relevant plce in memory
+    	 * 	A=(sp)
+    	 * 	M=M-1
+    	 */
+    	asmLines.add("@"+String.valueOf(address));
+    	asmLines.add("D=A");
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get(memory)));
+    	asmLines.add("A=M+D");
+    	asmLines.add("D=M");	// read from memory to D
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
+    	asmLines.add("A=M");
+    	asmLines.add("M=D");	//	update value in stack
+    	//	and now, sp = sp + 1
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
+    	asmLines.add("M=M-1");
+    	
+    }
+    private void writePop(String memory, int address){
+    	
+    }
+    
+    
+    
 
     /**
      * perform the operation push
