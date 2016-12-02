@@ -57,6 +57,7 @@ public class CodeWriter {
 
     private HashMap<String, Integer> segmentBaseMap;
     
+    private CodeWriter2 writer;
     /** a singleton constructor*/
     private CodeWriter(){
         this.asmLines= new ArrayList<>();
@@ -68,6 +69,7 @@ public class CodeWriter {
         segmentBaseMap.put(THIS, 3);
         segmentBaseMap.put(THAT, 4);
         segmentBaseMap.put(TEMP, 5);
+        this.writer = new CodeWriter2(this.asmLines);
     }
 
 
@@ -98,15 +100,16 @@ public class CodeWriter {
      * @param number represent a data or an address
      */
     public void translate(String operation, String memory, int number){
-        if(operation.equals(PUSH)) {
+        /*if(operation.equals(PUSH)) {
             pushData(memory, number);
         }
         else if(operation.equals(POP)){
             popData(memory);
-        }
+        }*/ //omri
+        writer.writePushPop(operation, memory, number);
 
     }
-    // omri
+    // omri////////////////////////////////////////////////////////////////////////
     public void writePushPop(String operation, String memory, int address){
         if(operation.equals(PUSH)) {
         	writePush(memory, address);
@@ -117,38 +120,137 @@ public class CodeWriter {
 
     }
     
-    private void writePush(String memory, int address){
+    private void writePush(String memory, int arg2){
     	/*
-    	 * 	@address
-    	 * 	D=A
-    	 * 	@memory	//A=(segment address adress)
-    	 * 	A=M+D
-    	 * 	D=M //	read the relevant content to D
-    	 * 	A=(sp)
-    	 * 	A=M
-    	 * 	M=D	//	update relevant plce in memory
-    	 * 	A=(sp)
-    	 * 	M=M-1
+    	 * case local, argument, this, that
+    	 * 
     	 */
-    	asmLines.add("@"+String.valueOf(address));
-    	asmLines.add("D=A");
-    	asmLines.add("@"+String.valueOf(segmentBaseMap.get(memory)));
-    	asmLines.add("A=M+D");
-    	asmLines.add("D=M");	// read from memory to D
-    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
-    	asmLines.add("A=M");
-    	asmLines.add("M=D");	//	update value in stack
-    	//	and now, sp = sp + 1
-    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
-    	asmLines.add("M=M-1");
+    	//asmLines.add();
+    	if(memory.equals(CONSTANT)){
+    		//@13
+    		int tmpReg = 13;
+    		writeInsertConstantToRx(arg2, tmpReg);
+    		writePushRx(tmpReg);
+    	}
+    	else{//case local, argument, this, that
+
+    		writeComputeFisicalAdrassStoreInRx(memory, arg2, 14);
+    		//writeCopyFromAddressInRxToRx2(14, 13);
+    		writePushRx(13);
+
+    		    		
+    	}
     	
+    }
+    private void writeInsertConstantToRx(int value, int x){
+    	if((x<13)||(x>15)){
+    		System.out.println("error! using R[13-15] , x wrong");
+    	}
+    	asmLines.add("@"+String.valueOf(value));
+    	asmLines.add("D=A");
+    	asmLines.add("@"+String.valueOf(x));
+    	asmLines.add("M=D");
+    	// @value
+    	// D=A
+    	// @x
+    	// M=D
     }
     private void writePop(String memory, int address){
-    	
+    	if(memory.equals(null)){
+    		writePopRx(13);
+   	}
+   	else{//case local, argument, this, that
+   		writeComputeFisicalAdrassStoreInRx(memory, address, 14);	// compute destination address
+   		writePopRx(13);		// stack -> Ram[13]
+   		//writeCopyFromRxToAddressIsInRx2(13, 14);
+   		    		
+   	}	
     }
     
+    //	push the value from Ram[x] to the stack. x in [13,15]
+    private void writePushRx(int x){
+    	/*
+    	 * check x in [13,15]
+    	 * @x
+    	 * D=M
+    	 *	the value of R13 is in D register
+    	 * @SP
+    	 * A=M
+    	 * 	A point to the stack
+    	 * M=D
+    	 * 	the value is written in the stack memory
+    	 * @sp
+    	 * M=M+1
+    	 * 	the stack index is now ++
+    	 */
+    	if((x<13)||(x>15)){
+    		System.out.println("error! using R[13-15] , x wrong");
+    	}
+    	asmLines.add("@"+String.valueOf(x));
+    	asmLines.add("D=M");
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
+    	asmLines.add("A=M");
+    	asmLines.add("M=D");
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
+    	asmLines.add("M=M+1");
+    	
+    }
+
+    //	pop from the stack to Ram[x]. x in [13,15]
+    private void writePopRx(int x){
+    	/*
+    	 * check x in [13,15]
+    	 * @SP
+    	 * M=M-1
+    	 * 	stack pointer decreased
+    	 * A=M
+    	 * 	A points to the stack
+    	 * D=M
+    	 * 	D value is the needed value
+    	 * @x
+    	 * M=D
+    	 * 	finito
+    	 */
+    	if((x<13)||(x>15)){
+    		System.out.println("error! using R[13-15] , x wrong");
+    	}
+    	writePopToD();
+    	asmLines.add("@" + String.valueOf(x));
+    	asmLines.add("M=D");
+    }
     
+    private void writePopToD(){
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get("SP")));
+    	asmLines.add("M=M-1");
+    	asmLines.add("A=M");
+    	asmLines.add("D=M");
+    }
     
+    // x2 is empty memory cell in range [13,15], used by the method
+
+
+    private void writeComputeFisicalAdrassStoreInRx(String segment, int subAdress, int x){
+   	 /*
+   	 * check x in [13,15]
+   	 * @subAddress
+   	 * D=A
+   	 * @segment
+   	 * D=M+D
+   	 * 	D is now the memroy fisical address
+   	 * @x2
+   	 * M=D
+   	 * 	now Ram[x] = src fisical address, Ram[x2] = fisical dest address
+   	 */
+    	if((x<13)||(x>15)){
+    		System.out.println("error! using R[13-15] , x wrong");
+    	}
+    	asmLines.add("@"+String.valueOf(subAdress));
+    	asmLines.add("D=A");
+    	asmLines.add("@"+String.valueOf(segmentBaseMap.get(segment)));
+    	asmLines.add("D=M+D");
+    	asmLines.add("@"+String.valueOf(x));
+    	asmLines.add("M=D");
+    }
 
     /**
      * perform the operation push
@@ -156,10 +258,11 @@ public class CodeWriter {
      * @param data the data that being inserted into to the stack
      */
     private void pushData(String memory,int data){
+    	System.out.println("pushData");
         if(memory.equals(CONSTANT)){
             asmLines.add(AT+data);
             asmLines.add(D+EQUAL+A); //assign d register with the data
-            asmLines.add(AT+segment.getSp()); //get the address
+            asmLines.add(AT+segment.getSp()); //get the address אחי, WTF????? מה נראה לך? זה עבודה זה?
             asmLines.add(M+EQUAL+D); // assign a M register with the data
             this.segment.push(data);
         }
@@ -171,15 +274,22 @@ public class CodeWriter {
      */
     private int popData(String memory){
         if(memory==null){
+        	writePopToD();/*
             asmLines.add(AT+segment.getSp()); //set the address of the m register as the stack's tpo
             asmLines.add(D+EQUAL+M); //assign D as M
-            return this.segment.pop();
+            return this.segment.pop();*/
         }
         return 0;// todo change later on
     }
-
+    
     public void translateArithmetic(String operation) {
-        segment.setSp(-1);
+    	if (operation.equals(EQ)|| operation.equals(GT)|| operation.equals(LT)){
+    		writer.writeBoolean(operation);
+    	}else{
+        	writer.writeArithnetic(operation);
+
+    	}
+        /*segment.setSp(-1);
         int dRegister= popData(null); // pop the data from the stack and store it d register
         asmLines.add(AT + segment.getSp());
 
@@ -198,6 +308,7 @@ public class CodeWriter {
             checkBitWiseOp(operation, dRegister); // if the operation is a bitwise operation
         }
         advanceSP(); // translate the assignment of a new value at R0(SP)
+        */
     }
 
     /**
@@ -290,4 +401,5 @@ public class CodeWriter {
             pushData(CONSTANT, value); // if value is non negative push into the stack
         }
     }
+
 }
