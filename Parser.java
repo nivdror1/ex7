@@ -27,7 +27,7 @@ public class Parser {
     private static final String TEMP="TEMP";
 
 
-    private static final String MEMORY= "\\b(constant|local|argument|this|that|pointer|temp)\\b";
+    private static final String MEMORY= "\\b(constant|local|argument|this|that|pointer|temp|static)\\b";
     private static final Pattern MEMORY_PATTERN= Pattern.compile(MEMORY);
 
     private static final String DECIMAL_NUMBER = "\\d++";
