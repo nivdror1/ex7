@@ -31,3 +31,13 @@
     	asmLines.add("A=M");
     	asmLines.add("M=D");    	
     }
+
+
+        /*this.segmentBaseMap = new HashMap<String, Integer>(100);
+        segmentBaseMap.put("local", 1);
+        segmentBaseMap.put("argument", 2);
+        segmentBaseMap.put("this", 3);
+        segmentBaseMap.put("that", 4);
+        segmentBaseMap.put("pointer", 3);
+        segmentBaseMap.put("temp", 5);
+        segmentBaseMap.put("static", 16);*/
