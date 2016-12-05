@@ -1,5 +1,3 @@
-import com.sun.org.apache.bcel.internal.classfile.Code;
-
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,15 +14,6 @@ public class Parser {
     private static final String PUSH_AND_POP ="\\b(push|pop)\\b";
     private static final Pattern PUSH_AND_POP_PATTERN = Pattern.compile(PUSH_AND_POP);
 
-    private static final String PUSH ="push";
-    private static final String POP ="pop";
-    private static final String CONSTANT= "constant";
-    private static final String LOCAL ="local";
-    private static final String ARGUMENT="argument";
-    private static final String THIS="this";
-    private static final String THAT="that";
-    private static final String POINTER="pointer";
-    private static final String TEMP="TEMP";
 
 
     private static final String MEMORY= "\\b(constant|local|argument|this|that|pointer|temp)\\b";
@@ -102,7 +91,6 @@ public class Parser {
                 this.operation = this.curLine.substring(this.curMatcher.start(), this.curMatcher.end());
                 return true;
             }
-            //todo parse the other operations
         }
         return true;
     }
