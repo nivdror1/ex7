@@ -1,4 +1,4 @@
-import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -14,6 +14,7 @@ public class IO {
     private static final String VM= DOT+"vm";
     private static final Pattern VM_PATTERN =Pattern.compile(VM);
     private static final int THREE =3;
+    private static final String NEW_LINE="\n";
 
 
     /**
@@ -114,7 +115,7 @@ public class IO {
 
             //write the binary code to an output file
             for (int i = 0; i < CodeWriter.getCodeWriter().getAsmLines().size(); i++) {
-                writer.write(CodeWriter.getCodeWriter().getAsmLines().get(i) + "\n");
+                writer.write(CodeWriter.getCodeWriter().getAsmLines().get(i) + NEW_LINE);
             }
         }catch(IOException e2){
             System.out.println(UNWRITTENABLE_FILE);
