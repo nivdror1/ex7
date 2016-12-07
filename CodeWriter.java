@@ -35,7 +35,11 @@ public class CodeWriter {
     private static final String STATIC= "static";
     private static final String TEMP= "temp";
 
-
+/**
+ * every enum AssemblyFunction is maped to a function written in assembly that is
+ * exists in the assemblyCode directory.
+ *
+ */
     public enum AssemblyFunction {
         CopyAToR13,
         CopyAToR14,
@@ -309,7 +313,10 @@ public class CodeWriter {
         }
     }
 
-    //todo i dont understand what the function does, so omri please document this function
+    /**
+    * this is sub-rutine of all the different "writePushToXXX" methods.
+    * it writes to the assembly code some common nessecery lines of performing "push".
+    */
     private void pushSub_arg_const_this_that(){
         asm("A=A+D");
         asm("// A have now the address of the data to take from the ram");
