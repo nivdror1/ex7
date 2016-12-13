@@ -26,7 +26,7 @@ public class IO {
         {
             //check if it is a file or a directory and get all the appropriate files
             ArrayList<File> vmList =fileOrDirectory(file);
-            String outputFileName = setOutputFileName(vmList.size(),file);
+            String outputFileName = setOutputFileName(file);
 
             readAllVmFiles(vmList);
             writeToASingleAsmFile(outputFileName);
@@ -37,13 +37,12 @@ public class IO {
 
     /**
      * get the name of the asm file and exchange it to asm file
-     * @param fileCount the number of files to parse
      * @param file the input file
      * @return the file name but with a suffix of a asm file
      */
-    private static String setOutputFileName(int fileCount, File file ) {
+    private static String setOutputFileName( File file ) {
         String location= file.getAbsolutePath();
-        if(fileCount==1){ // if the there is only one file
+        if(file.isFile()){ // if the there is only one file
             location=location.substring(0,location.length()-THREE);
             location+= ASM;
         }
@@ -56,16 +55,17 @@ public class IO {
     /**
      * read and parse a specific file
      * @param reader a bufferReader
+     * @param className the current class name
      * @throws IOException
      */
-    private static void readAndParse(BufferedReader reader) throws IOException {
+    private static void readAndParse(BufferedReader reader, String className) throws IOException {
         Parser parser = new Parser(); //define a new parser
         String text;
         while ((text = reader.readLine()) != null) // add the lines to the container
         {
             parser.getVmLines().add(text);
         }
-        parser.parseVmFile(); // parse the vm text
+        parser.parseVmFile(className); // parse the vm text
     }
 
     /**
@@ -105,7 +105,7 @@ public class IO {
                  BufferedReader reader = new BufferedReader(vmFile))
             {
                 //read the file and parse it
-                readAndParse(reader);
+                readAndParse(reader,vmList.get(j).getName());
 
             } catch (IOException e) {
                 System.out.println(UNREADABLE_FILE);

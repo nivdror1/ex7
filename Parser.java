@@ -10,13 +10,15 @@ public class Parser {
     private static final String EMPTY_LINE= "^\\s*+$";
     private static final Pattern EMPTY_LINE_PATTERN= Pattern.compile(EMPTY_LINE);
     private static final Pattern COMMENT_PATTERN= Pattern.compile(ONE_LINER_COMMENT);
+    private static final String DOT ="[a-zA-Z]{1}\\w*+(\\.){1}";
+    private static final Pattern DOT_PATTERN= Pattern.compile(DOT);
 
     private static final String PUSH_AND_POP ="\\b(push|pop)\\b";
     private static final Pattern PUSH_AND_POP_PATTERN = Pattern.compile(PUSH_AND_POP);
 
 
 
-    private static final String MEMORY= "\\b(constant|local|argument|this|that|pointer|temp|static)\\b";
+    private static final String MEMORY= "\\b(constant|local|argument|this|that|pointer|temp)\\b";
     private static final Pattern MEMORY_PATTERN= Pattern.compile(MEMORY);
 
     private static final String DECIMAL_NUMBER = "\\d++";
@@ -25,8 +27,7 @@ public class Parser {
     private static final String ARITHMETIC ="\\b(add|sub|neg|eq|gt|lt|and|or|not)\\b";
     private static final Pattern ARITHMETIC_PATTERN= Pattern.compile(ARITHMETIC);
 
-    /** a string that represent the current arithmetic operation*/
-    private String curArithmetic;
+
     /** A string that represent the current memory address*/
     private String curMemory;
     /** A string that represent the current number being processed*/
@@ -39,10 +40,11 @@ public class Parser {
     private ArrayList<String> vmLines;
     /**a string that represent the current vm line*/
     private String curLine;
-
+    /** a string that represent the current class name*/
+    private String className;
     /** a constructor*/
     public Parser(){
-        this.operation=this.curMemory=this.curArithmetic="";
+        this.operation=this.curMemory="";
         this.vmLines= new ArrayList<>();
 
     }
@@ -54,7 +56,8 @@ public class Parser {
     /**
      * parse the vm file
      */
-    public void parseVmFile(){
+    public void parseVmFile(String className){
+        parseClassName(className);
         for(int i=0; i<vmLines.size();i++){
             this.curLine= vmLines.get(i); // assign the current line
             if(deleteOneLinerComment(this.curLine)||deleteBlankLines(this.curLine))
@@ -65,8 +68,8 @@ public class Parser {
             {
                 signifyMemorySegment(); //check which memory segment
                 insertDecimalNumber(); //assign a decimal number
-                CodeWriter.getCodeWriter().translate(this.operation,
-                        this.curMemory,this.curNumber); //translate the operation
+                CodeWriter.getCodeWriter().writePushPop(this.operation,
+                        this.curMemory,this.curNumber,this.className); //translate the operation
             }
             else
             { //translate the arithmetic operation
@@ -137,5 +140,16 @@ public class Parser {
     {
         Matcher m= COMMENT_PATTERN.matcher(line);
         return m.lookingAt();
+    }
+
+    /**
+     * parse the class name
+     * @param className the name of the file that being parsed
+     */
+    private void parseClassName(String className){
+        this.curMatcher=DOT_PATTERN.matcher(className);
+        if(this.curMatcher.find()){
+            this.className= className.substring(0,this.curMatcher.end());
+        }
     }
 }
