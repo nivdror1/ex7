@@ -620,19 +620,19 @@ public class CodeWriter {
      */
     private void addFunctionsToHashMap(){
         String dirPath = "assemblyCode";//"C:\\Users\\omri\\workspace\\ex7\\assemblyCode";
-        codeFileMap.put(AssemblyFunction.CopyAToR13, dirPath + "\\CopyAToR13.asm");
-        codeFileMap.put(AssemblyFunction.CopyAToR14, dirPath + "\\CopyAToR14.asm");
-        codeFileMap.put(AssemblyFunction.CopyFromR13ToRamAddressInR14, dirPath + "\\CopyFromR13ToRamAddressInR14.asm");
-        codeFileMap.put(AssemblyFunction.LoadArgumentAddressToA, dirPath + "\\LoadArgumentAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadLocalAddressToA,  dirPath + "\\LoadLocalAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadStackAddressToA, dirPath + "\\LoadStackAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadThatAddressLoA, dirPath + "\\LoadThatAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadThisAddressToA, dirPath + "\\LoadThisAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.PopR13, dirPath + "\\PopR13.asm");
-        codeFileMap.put(AssemblyFunction.PopToD, dirPath + "\\PopToD.asm");
-        codeFileMap.put(AssemblyFunction.PushR13, dirPath + "\\pushR13.asm");
-        codeFileMap.put(AssemblyFunction.PushD, dirPath + "\\PushD.asm");
-        codeFileMap.put(AssemblyFunction.AdvanceStack, dirPath + "\\AdvanceStack.asm");
+        codeFileMap.put(AssemblyFunction.CopyAToR13, dirPath + "/CopyAToR13.asm");
+        codeFileMap.put(AssemblyFunction.CopyAToR14, dirPath + "/CopyAToR14.asm");
+        codeFileMap.put(AssemblyFunction.CopyFromR13ToRamAddressInR14, dirPath + "/CopyFromR13ToRamAddressInR14.asm");
+        codeFileMap.put(AssemblyFunction.LoadArgumentAddressToA, dirPath + "/LoadArgumentAddressToA.asm");
+        codeFileMap.put(AssemblyFunction.LoadLocalAddressToA,  dirPath + "/LoadLocalAddressToA.asm");
+        codeFileMap.put(AssemblyFunction.LoadStackAddressToA, dirPath + "/LoadStackAddressToA.asm");
+        codeFileMap.put(AssemblyFunction.LoadThatAddressLoA, dirPath + "/LoadThatAddressToA.asm");
+        codeFileMap.put(AssemblyFunction.LoadThisAddressToA, dirPath + "/LoadThisAddressToA.asm");
+        codeFileMap.put(AssemblyFunction.PopR13, dirPath + "/PopR13.asm");
+        codeFileMap.put(AssemblyFunction.PopToD, dirPath + "/PopToD.asm");
+        codeFileMap.put(AssemblyFunction.PushR13, dirPath + "/PushR13.asm");
+        codeFileMap.put(AssemblyFunction.PushD, dirPath + "/PushD.asm");
+        codeFileMap.put(AssemblyFunction.AdvanceStack, dirPath + "/AdvanceStack.asm");
     }
 
 }

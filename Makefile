@@ -12,7 +12,7 @@ JAVAC=javac
 JAVACFLAGS=
 
 SRCS=*.java
-EXEC=Assembler
+EXEC=VMtranslator
 
 TAR=tar
 TARFLAGS=cvf
