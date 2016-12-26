@@ -47,7 +47,7 @@ public class IO {
             location+= ASM;
         }
         else{ //if it is a directory
-            location+=SLASH+file.getName()+ASM;
+            location+="/"+file.getName()+ASM;
         }
         return location;
     }
