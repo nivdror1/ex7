@@ -1,9 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.lang.String;
 
 
@@ -35,38 +30,12 @@ public class CodeWriter {
     private static final String STATIC= "static";
     private static final String TEMP= "temp";
 
-/**
- * every enum AssemblyFunction is maped to a function written in assembly that is
- * exists in the assemblyCode directory.
- *
- */
-    public enum AssemblyFunction {
-        CopyAToR13,
-        CopyAToR14,
-        CopyFromRamAddressInR14ToR13,
-        CopyFromR13ToRamAddressInR14,
-        LoadArgumentAddressToA,
-        LoadLocalAddressToA,
-        LoadStackAddressToA,
-        LoadThatAddressLoA,
-        LoadThisAddressToA,
-        PopR13,
-        PopToD,
-        PushR13,
-        PushD,
-        AdvanceStack
-
-    }
-
-
     /** the unique instance of CodeWriter*/
     private static CodeWriter codeWriter= null;
 
     /** this ArrayList signify the output asm code*/
     private ArrayList<String> asmLines;
 
-    /** a hash map that contains asm functions*/
-    private HashMap<AssemblyFunction, String>	codeFileMap;
 
     /** a label counter*/
 
@@ -77,8 +46,6 @@ public class CodeWriter {
     private CodeWriter(){
         this.asmLines= new ArrayList<>();
         labelCounter = 0;
-        codeFileMap = new HashMap<>();
-        addFunctionsToHashMap();
     }
 
 
@@ -148,8 +115,8 @@ public class CodeWriter {
      */
     private void writeAdd(){
             asm("// ---add---");
-            writeFunctionFromFile(	AssemblyFunction.PopToD					);
-            writeFunctionFromFile(	AssemblyFunction.LoadStackAddressToA	);
+            popToD();
+            loadStackAddressToA();
             asm("A=A-1");
             asm("M=M+D");
             asm("//// ---add-end---");
@@ -159,8 +126,8 @@ public class CodeWriter {
      */
     private void writeSub(){
         asm("//// ---sub---");
-        writeFunctionFromFile(	AssemblyFunction.PopToD					);
-        writeFunctionFromFile(	AssemblyFunction.LoadStackAddressToA	);
+        popToD();
+        loadStackAddressToA();
         asm("A=A-1");
         asm("M=M-D");
         asm("//// ---sub-end---");
@@ -170,7 +137,7 @@ public class CodeWriter {
      */
     private void writeNeg(){
         asm("//// ---neg---");
-        writeFunctionFromFile(AssemblyFunction.LoadStackAddressToA);
+        loadStackAddressToA();
         asm("A=A-1");
         asm("M=-M");
         asm("//// ---neg-end---");
@@ -180,8 +147,8 @@ public class CodeWriter {
      */
     private void writeAnd(){
         asm("//// ---and---");
-        writeFunctionFromFile(	AssemblyFunction.PopToD					);
-        writeFunctionFromFile(	AssemblyFunction.LoadStackAddressToA	);
+        popToD();
+        loadStackAddressToA();
         asm("A=A-1");
         asm("M=M&D");
         asm("//// ---and-end---");
@@ -191,8 +158,8 @@ public class CodeWriter {
      */
     private void writeOr(){
         asm("//// ---or---");
-        writeFunctionFromFile(	AssemblyFunction.PopToD					);
-        writeFunctionFromFile(	AssemblyFunction.LoadStackAddressToA	);
+        popToD();
+        loadStackAddressToA();
         asm("A=A-1");
         asm("M=M|D");
         asm("//// ---or-end---");
@@ -202,7 +169,7 @@ public class CodeWriter {
      */
     private void writeNot(){
         asm("//// ---not---");
-        writeFunctionFromFile(AssemblyFunction.LoadStackAddressToA);
+        loadStackAddressToA();
         asm("A=A-1");
         asm("M=!M");
         asm("//// ---not-end---");
@@ -236,14 +203,14 @@ public class CodeWriter {
         writeSub();
         asm("@1");
         asm("A=-A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR13);
-        writeFunctionFromFile(AssemblyFunction.PopToD);
+        copyAToR13();
+        popToD();
         asm("@label" + String.valueOf(this.labelCounter));
         asm(RuleOnD);//asm("D; JEQ");
         asm("@0");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR13);
+        copyAToR13();
         asm("(label" + String.valueOf(this.labelCounter) + ")");
-        writeFunctionFromFile(AssemblyFunction.PushR13);
+        pushR13();
         this.labelCounter++;
 
     }
@@ -270,7 +237,6 @@ public class CodeWriter {
      * @param className the current class name
      */
     public void writePushPop(String operation, String memory, int address, String className){
-        // todo is really a address input or data or both?
         if(operation.equals(PUSH)) {
             writePush(memory, address,className); //write push
         }
@@ -328,10 +294,10 @@ public class CodeWriter {
         asm("M=D");
         asm("// R13 now have the data");
 
-        writeFunctionFromFile(AssemblyFunction.LoadStackAddressToA);
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
-        writeFunctionFromFile(AssemblyFunction.AdvanceStack);
+        loadStackAddressToA();
+        copyAToR14();
+        copyFromR13ToRamAddressInR14();
+        advanceStack();
     }
 
     /**
@@ -365,36 +331,12 @@ public class CodeWriter {
                 break;
             //case (null):
             default:
-                writeFunctionFromFile(AssemblyFunction.PopToD);
+                popToD();
                 break;
 
         }
     }
 
-    /**
-     * write the assembly function that is given as an input
-     * @param function the name of the assembly function that need to be written
-     */
-    private void writeFunctionFromFile(AssemblyFunction function){
-        String path = this.codeFileMap.get(function);
-        File file= new File(path);
-        if(file.exists()){
-            try (FileReader asmFile = new FileReader(file);
-                BufferedReader reader =new BufferedReader(asmFile)){
-                String line;
-                while((line= reader.readLine())!=null) // add the lines to the container
-                {
-                    asm(line);
-                }
-            } catch (IOException e) {
-                System.out.println("Files error   " + path);
-                e.printStackTrace();
-            }// define the BufferReader and BufferWriter
-
-        }else{
-            System.out.println("error! function file " + path + "not exist!!!");
-        }
-    }
     /**
      * add an asm line to asmLines
      */
@@ -409,7 +351,7 @@ public class CodeWriter {
     private void writePushToConstant(int arg2){
         asm("//// ----- push constant -------");
         writeInsertConstantToR13(arg2);
-        writeFunctionFromFile(AssemblyFunction.PushR13);
+        pushR13();
         asm("//// ----- push constant end -------");
     }
     /**
@@ -439,10 +381,10 @@ public class CodeWriter {
         asm("M=D");
         asm("// R13 now have the data");
 
-        writeFunctionFromFile(AssemblyFunction.LoadStackAddressToA);
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
-        writeFunctionFromFile(AssemblyFunction.AdvanceStack);
+        loadStackAddressToA();
+        copyAToR14();
+        copyFromR13ToRamAddressInR14();
+        advanceStack();
         asm("//// ----- push static end-------");
     }
 
@@ -454,7 +396,7 @@ public class CodeWriter {
         asm("//// ----- push that -------");
         asm("@" + String.valueOf(arg2));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadThatAddressLoA);
+        loadThatAddressToA();
         pushSub_arg_const_this_that();
         asm("//// ----- push that end-------");
     }
@@ -466,7 +408,7 @@ public class CodeWriter {
         asm("//// ----- push this -------");
         asm("@" + String.valueOf(arg2));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadThisAddressToA);
+        loadThisAddressToA();
         pushSub_arg_const_this_that();
         asm("//// ----- push this end-------");
     }
@@ -478,7 +420,7 @@ public class CodeWriter {
         asm("//// ----- push local -------");
         asm("@" + String.valueOf(arg2));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadLocalAddressToA);
+        loadLocalAddressToA();
         pushSub_arg_const_this_that();
         asm("//// ----- push local end-------");
     }
@@ -490,7 +432,7 @@ public class CodeWriter {
         asm("//// ----- push argument -------");
         asm("@" + String.valueOf(arg2));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadArgumentAddressToA);
+        loadArgumentAddressToA();
         pushSub_arg_const_this_that();
         asm("//// ----- push argument end-------");
     }
@@ -517,9 +459,9 @@ public class CodeWriter {
         asm("D=A");
         asm("@5");
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop temp end -- ");
     }
     /**
@@ -530,11 +472,11 @@ public class CodeWriter {
         asm("//// -- pop this -- ");
         asm("@" + String.valueOf(address));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadThisAddressToA);
+        loadThisAddressToA();
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop this end -- ");
     }
     /**
@@ -545,11 +487,11 @@ public class CodeWriter {
         asm("//// -- pop that -- ");
         asm("@" + String.valueOf(address));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadThatAddressLoA);
+        loadThatAddressToA();
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop that end -- ");
     }
     /**
@@ -562,9 +504,9 @@ public class CodeWriter {
         asm("D=A");
         asm("@3");
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop pointer end -- ");
     }
 
@@ -578,9 +520,9 @@ public class CodeWriter {
         asm("@" + String.valueOf(address));
         asm("D=A");
         asm("@"+className+address);
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop static end -- ");
     }
 
@@ -592,11 +534,11 @@ public class CodeWriter {
         asm("//// -- pop local -- ");
         asm("@" + String.valueOf(address));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadLocalAddressToA);
+        loadLocalAddressToA();
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop local end -- ");
     }
     /**
@@ -607,32 +549,136 @@ public class CodeWriter {
         asm("//// -- pop argument -- ");
         asm("@" + String.valueOf(address));
         asm("D=A");
-        writeFunctionFromFile(AssemblyFunction.LoadArgumentAddressToA);
+        loadArgumentAddressToA();
         asm("A=D+A");
-        writeFunctionFromFile(AssemblyFunction.CopyAToR14);
-        writeFunctionFromFile(AssemblyFunction.PopR13);
-        writeFunctionFromFile(AssemblyFunction.CopyFromR13ToRamAddressInR14);
+        copyAToR14();
+        popR13();
+        copyFromR13ToRamAddressInR14();
         asm("//// -- pop argument end -- ");
     }
 
+
+
     /**
-     * add the assembly functions to the hash map
+     * advance SP
      */
-    private void addFunctionsToHashMap(){
-        String dirPath = "assemblyCode";//"C:\\Users\\omri\\workspace\\ex7\\assemblyCode";
-        codeFileMap.put(AssemblyFunction.CopyAToR13, dirPath + "\\CopyAToR13.asm");
-        codeFileMap.put(AssemblyFunction.CopyAToR14, dirPath + "\\CopyAToR14.asm");
-        codeFileMap.put(AssemblyFunction.CopyFromR13ToRamAddressInR14, dirPath + "\\CopyFromR13ToRamAddressInR14.asm");
-        codeFileMap.put(AssemblyFunction.LoadArgumentAddressToA, dirPath + "\\LoadArgumentAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadLocalAddressToA,  dirPath + "\\LoadLocalAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadStackAddressToA, dirPath + "\\LoadStackAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadThatAddressLoA, dirPath + "\\LoadThatAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.LoadThisAddressToA, dirPath + "\\LoadThisAddressToA.asm");
-        codeFileMap.put(AssemblyFunction.PopR13, dirPath + "\\PopR13.asm");
-        codeFileMap.put(AssemblyFunction.PopToD, dirPath + "\\PopToD.asm");
-        codeFileMap.put(AssemblyFunction.PushR13, dirPath + "\\pushR13.asm");
-        codeFileMap.put(AssemblyFunction.PushD, dirPath + "\\PushD.asm");
-        codeFileMap.put(AssemblyFunction.AdvanceStack, dirPath + "\\AdvanceStack.asm");
+    private void advanceStack(){
+        asm("//// AdvanceStack");
+        asm("@SP");
+        asm("M=M+1");
     }
 
+    /**
+     * set R13 as the address
+     */
+    private void copyAToR13(){
+        asm("//	Copy A To R13");
+        asm("D=A");
+        asm("@R13");
+        asm("M=D");
+    }
+
+    /**
+     * set R14 as the address
+     */
+    private void copyAToR14(){
+        asm("//Copy A To R14");
+        asm("D=A");
+        asm("@R14");
+        asm("M=D");
+    }
+
+    /**
+     * set R14 as R13
+     */
+    private void copyFromR13ToRamAddressInR14(){
+        asm("// copy from r13 to ram address in ram14");
+        asm("@13");
+        asm("D=M");
+        asm("@14");
+        asm("A=M");
+        asm("M=D");
+    }
+
+
+    /**
+     * load arg address to A
+     */
+    private void loadArgumentAddressToA(){
+        asm("@ARG");
+        asm("A=M");
+    }
+
+    /**
+     * load local address to A
+     */
+    private void loadLocalAddressToA(){
+        asm("@LCL");
+        asm("A=M");
+    }
+
+    /**
+     * load stack address to A
+     */
+    private void loadStackAddressToA(){
+        asm("@SP");
+        asm("A=M");
+    }
+
+    /**
+     * load that address to A
+     */
+    private void loadThatAddressToA(){
+        asm("@THAT");
+        asm("A=M");
+    }
+
+    /**
+     * load this address to A
+     */
+    private void loadThisAddressToA(){
+        asm("@THIS");
+        asm("A=M");
+    }
+
+    /**
+     * pop R13
+     */
+    private void popR13(){
+        asm("//pop to R13");
+        asm("// first stage - pop to D");
+        asm("@SP");
+        asm("M=M-1");
+        asm("A=M");
+        asm("D=M");
+        asm("//second stage - write D to R13");
+        asm("@R13");
+        asm("M=D");
+    }
+
+    /**
+     * pop to D
+     */
+    private void popToD (){
+        asm("// popToD");
+        asm("@0");
+        asm("M=M-1");
+        asm("A=M");
+        asm("D=M");
+    }
+
+
+    /**
+     * push R13
+     */
+    private void pushR13(){
+        asm("// PushR13");
+        asm("@R13");
+        asm("D=M");
+        asm("@SP");
+        asm("A=M");
+        asm("M=D");
+        asm("@SP");
+        asm("M=M+1");
+    }
 }
